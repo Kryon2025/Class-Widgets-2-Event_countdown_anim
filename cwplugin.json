@@ -6,6 +6,7 @@
   "entry": "main.py",
   "author": "松峰",
   "description": "为内置\"事件倒计时\"组件添加动画开关（主程序设置页）",
+  "url":"https://github.com/Kryon2025/Class-Widgets-2-Event_countdown_anim.git",
   "readme": "README.md",
   "icon": "icon.png"
 }
