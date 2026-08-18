@@ -1,7 +1,7 @@
 {
   "id": "com.event.countdown.anim",
   "name": "事件倒计时动画开关",
-  "version": "1.0.0",
+  "version": "v1.0.0",
   "api_version": "~=0.6.0",
   "entry": "main.py",
   "author": "松峰",
