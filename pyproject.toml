@@ -1,0 +1,14 @@
+[project]
+name = "com-event-countdown-anim"
+version = "1.0.0"
+description = "Class Widgets 2 内置事件倒计时组件动画开关扩展"
+authors = [
+    {name = "Kryon"},
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["class-widgets-sdk>=0.6.0"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
