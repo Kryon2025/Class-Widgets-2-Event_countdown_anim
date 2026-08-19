@@ -1,11 +1,11 @@
 {
   "id": "com.event.countdown.anim",
   "name": "事件倒计时动画开关",
-  "version": "v1.0.0",
+  "version": "1.0.1",
   "api_version": "~=0.6.0",
   "entry": "main.py",
   "author": "松峰",
-  "description": "为内置\"事件倒计时\"组件添加动画开关（主程序设置页）",
+  "description": "为内置\"事件倒计时\"组件添加动画开关（主程序设置页）(此插件由Deepseek V4 Flash编写)",
   "url":"https://github.com/Kryon2025/Class-Widgets-2-Event_countdown_anim.git",
   "readme": "README.md",
   "icon": "icon.png"

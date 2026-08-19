@@ -22,7 +22,7 @@ from PySide6.QtCore import Slot
 
 from ClassWidgets.SDK import CW2Plugin, PluginAPI
 
-from config import AnimConfig
+from anim_config import AnimConfig
 
 # 补丁标记：写入补丁版 QML 文件头，用于识别当前文件是否已被本插件修改
 PATCH_MARK = "// [patched by com.event.countdown.anim]"
