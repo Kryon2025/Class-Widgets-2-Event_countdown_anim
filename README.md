@@ -1,6 +1,6 @@
 # 事件倒计时动画开关 / Event Countdown Animation Toggle
 
-为 Class Widgets 2 **内置"事件倒计时"组件**（显示距离下课 / 课间剩余时间的组件）添加**动画开关**的扩展插件。
+为 Class Widgets 2 **内置"事件倒计时"组件**（显示距离下课 / 课间剩余时间的组件）添加**动画开关**的扩展插件。此插件由Deepseek V4 Flash开发。
 
 ## 背景
 
