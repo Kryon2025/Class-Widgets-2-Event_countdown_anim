@@ -13,6 +13,7 @@ Class Widgets 2 内置"事件倒计时"组件动画开关扩展插件
 
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -36,6 +37,20 @@ def _main_app_dir() -> Path:
 def _target_qml() -> Path:
     """内置"事件倒计时"组件的 QML 资源路径。"""
     return _main_app_dir() / "src" / "qml" / "widgets" / "eventCountdown.qml"
+
+
+def _atomic_write(path: Path, content: str) -> None:
+    """临时文件 + os.replace 原子写回，避免中途崩溃留下截断文件。"""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(content, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def _safe_copy(src: Path, dst: Path) -> None:
+    """原子恢复原版 QML。"""
+    tmp = dst.with_suffix(dst.suffix + ".tmp")
+    shutil.copyfile(src, tmp)
+    os.replace(tmp, dst)
 
 
 class Plugin(CW2Plugin):
@@ -62,6 +77,7 @@ class Plugin(CW2Plugin):
         self._register_settings_page()
 
     def on_unload(self):
+        super().on_unload()
         # 恢复主程序原始 QML，内置组件不受影响
         self._restore_qml()
         logger.info("[event.countdown.anim] 插件已卸载")
@@ -91,36 +107,52 @@ class Plugin(CW2Plugin):
             logger.warning("[event.countdown.anim] 未找到内置组件 QML: {}，跳过补丁", target)
             return
 
-        src = target.read_text(encoding="utf-8", errors="ignore")
-        if PATCH_MARK in src:
-            logger.info("[event.countdown.anim] 组件 QML 已打过补丁，跳过")
-            return
+        try:
+            src = target.read_text(encoding="utf-8", errors="ignore")
+            if PATCH_MARK in src:
+                logger.info("[event.countdown.anim] 组件 QML 已打过补丁，跳过")
+                return
 
-        # 首次补丁前备份原版
-        bak = target.with_suffix(".qml.bak")
-        if not bak.exists():
-            bak.write_text(src, encoding="utf-8")
-            logger.info("[event.countdown.anim] 已备份原版 QML: {}", bak)
+            # 备份原版；若主程序升级导致 target 与旧备份不一致，丢弃旧备份、以当前文件为准
+            bak = target.with_suffix(".qml.bak")
+            if bak.exists():
+                old = bak.read_text(encoding="utf-8", errors="ignore")
+                if old != src:
+                    logger.info("[event.countdown.anim] 检测到主程序组件已更新，刷新备份")
+                    bak.write_text(src, encoding="utf-8")
+            else:
+                bak.write_text(src, encoding="utf-8")
+                logger.info("[event.countdown.anim] 已备份原版 QML: {}", bak)
 
-        patch = Path(__file__).parent / "qml" / "eventCountdown.patch.qml"
-        if not patch.exists():
-            logger.error("[event.countdown.anim] 缺少补丁模板文件，补丁未应用")
-            return
-        target.write_text(patch.read_text(encoding="utf-8"), encoding="utf-8")
-        logger.info("[event.countdown.anim] 已为事件倒计时组件应用动画开关补丁")
+            patch = Path(__file__).parent / "qml" / "eventCountdown.patch.qml"
+            if not patch.exists():
+                logger.error("[event.countdown.anim] 缺少补丁模板文件，补丁未应用")
+                return
+            _atomic_write(target, patch.read_text(encoding="utf-8"))
+            logger.info("[event.countdown.anim] 已为事件倒计时组件应用动画开关补丁")
+        except OSError as e:
+            # 权限不足（如 Program Files 只读目录）：仅记日志，不影响插件加载
+            logger.error("[event.countdown.anim] 应用补丁失败: {}", e)
 
     def _restore_qml(self) -> None:
         target = _target_qml()
         bak = target.with_suffix(".qml.bak")
-        if not target.exists() or not bak.exists():
+        if not target.exists():
             return
-        if PATCH_MARK not in target.read_text(encoding="utf-8", errors="ignore"):
-            # 当前文件不是本插件补丁版（可能被主程序升级覆盖），保留现状
-            logger.info("[event.countdown.anim] 当前 QML 非补丁版，无需恢复")
-            return
-        shutil.copyfile(bak, target)
-        bak.unlink(missing_ok=True)
-        logger.info("[event.countdown.anim] 已恢复主程序原始 QML")
+        try:
+            if PATCH_MARK not in target.read_text(encoding="utf-8", errors="ignore"):
+                # 当前文件不是本插件补丁版（可能被主程序升级覆盖）：保留现状并清理残留备份
+                bak.unlink(missing_ok=True)
+                logger.info("[event.countdown.anim] 当前 QML 非补丁版，无需恢复")
+                return
+            if not bak.exists():
+                logger.warning("[event.countdown.anim] 备份缺失，无法恢复原始 QML")
+                return
+            _safe_copy(bak, target)
+            bak.unlink(missing_ok=True)
+            logger.info("[event.countdown.anim] 已恢复主程序原始 QML")
+        except OSError as e:
+            logger.error("[event.countdown.anim] 恢复 QML 失败: {}", e)
 
     # ---- 设置页 ------------------------------------------------------------
 

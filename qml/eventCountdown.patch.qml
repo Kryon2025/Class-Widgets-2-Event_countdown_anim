@@ -20,12 +20,17 @@ Widget {
     // 动画开关（插件 com.event.countdown.anim 在主程序设置页控制，默认开启）
     property bool animEnabled: true
     function refreshAnim() {
-        var cfg = Configs.data.plugins.configs["com.event.countdown.anim"]
+        var cfg = null
+        try {
+            cfg = Configs.data.plugins.configs["com.event.countdown.anim"]
+        } catch (e) {
+            cfg = null
+        }
         animEnabled = cfg ? cfg.animation !== false : true
     }
     Timer {
         interval: 300
-        running: true
+        running: visible  // 组件可见时才轮询
         repeat: true
         onTriggered: root.refreshAnim()
     }

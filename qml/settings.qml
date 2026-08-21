@@ -22,7 +22,8 @@ PluginPage {
 
             Switch {
                 checked: backend ? backend.getAnimation() : true
-                onCheckedChanged: {
+                // 仅用户操作时写配置，避免页面初始化触发无谓保存
+                onToggled: {
                     if (backend) backend.setAnimation(checked)
                 }
             }
